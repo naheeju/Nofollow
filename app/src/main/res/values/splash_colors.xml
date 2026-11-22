@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Warna splash screen mode terang. Versi gelap ada di values-night/splash_colors.xml dengan nama yang sama. -->
+<resources>
+    <color name="splash_background">#FFFFFFFF</color>
+    <color name="splash_title">#FF1C1B1F</color>
+    <color name="splash_subtitle">#FF6B6870</color>
+</resources>

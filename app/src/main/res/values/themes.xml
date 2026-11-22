@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Tema app mode terang. Latar jendela disamakan dengan splash supaya tidak ada kilasan warna saat berganti. -->
+    <style name="Theme.Nofollow" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <!-- Tema peluncur MainActivity: splash screen (ikon unfollower merah, warna latar mengikuti mode terang/gelap
+         lewat @color/splash_background), lalu berganti ke Theme.Nofollow. Teks "Nofollow" dan "by: ..." digambar
+         SplashBrandOverlay (Compose) di dekat bawah layar, karena splash sistem tidak bisa menampilkan teks sendiri. -->
+    <style name="Theme.Nofollow.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Nofollow</item>
+    </style>
+</resources>

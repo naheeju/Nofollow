@@ -1,0 +1,64 @@
+# ---------- Gradle ----------
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+
+# ---------- Kotlin / Compiler ----------
+.kotlin/
+*.class
+*.log
+
+# ---------- Android Studio / IntelliJ ----------
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ---------- Local config (machine specific) ----------
+local.properties
+
+# ---------- Signing & secrets (JANGAN PERNAH DI-COMMIT) ----------
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+secrets.properties
+.env
+.env.*
+google-services.json
+service-account*.json
+
+# ---------- Build outputs ----------
+*.apk
+*.aab
+*.ap_
+*.dex
+*.hprof
+output-metadata.json
+mapping.txt
+
+# ---------- Native / NDK ----------
+.externalNativeBuild/
+.cxx/
+
+# ---------- Reports & tooling ----------
+captures/
+lint-results*.xml
+lint-results*.html
+lint-report*
+reports/
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ---------- Misc ----------
+*.orig
+*.rej
+# Hasil build rilis & arsip
+/app/release/
+*.zip

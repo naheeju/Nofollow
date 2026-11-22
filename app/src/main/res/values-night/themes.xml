@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Tema app mode gelap: induk bertema gelap, supaya jendela tidak putih saat splash berganti ke app. -->
+    <style name="Theme.Nofollow" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>

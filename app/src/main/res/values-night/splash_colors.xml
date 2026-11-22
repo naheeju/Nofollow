@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Warna splash screen mode gelap. -->
+<resources>
+    <color name="splash_background">#FF141218</color>
+    <color name="splash_title">#FFE6E1E5</color>
+    <color name="splash_subtitle">#FFA9A4AE</color>
+</resources>

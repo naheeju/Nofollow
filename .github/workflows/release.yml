@@ -1,0 +1,95 @@
+# Rilis otomatis: tiap tag "v<versi>" yang di-push (mis. v1.0.1) membangun APK rilis, menandatanganinya dengan
+# keystore dari GitHub Secrets, lalu membuat GitHub Release berisi APK dengan nama tetap yang dikenali app:
+#   nofollow-arm64-v8a.apk dan nofollow-armeabi-v7a.apk
+# Push biasa ke main TIDAK membuat rilis, supaya pengguna tidak diberi notifikasi update tiap commit.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write   # membuat Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cek tag cocok dengan appVersionName
+        run: |
+          VERSION=$(grep -oP '^val appVersionName = "\K[^"]+' app/build.gradle.kts)
+          if [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME tidak cocok dengan appVersionName $VERSION di app/build.gradle.kts"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Siapkan keystore rilis
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Secret KEYSTORE_BASE64 belum diisi"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/release.jks" "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
+
+      - name: Build APK rilis
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Beri nama tetap dan cek tanda tangan
+        run: |
+          echo "== Isi folder output APK:"
+          find app/build/outputs/apk/release -type f
+          mkdir -p dist
+          for abi in arm64-v8a armeabi-v7a; do
+            f=$(find app/build/outputs/apk/release -name "*${abi}*.apk" ! -name "*unsigned*" | head -n 1)
+            if [ -z "$f" ]; then
+              echo "::error::APK $abi bertanda tangan tidak ditemukan (mungkin hanya ada versi unsigned)"
+              exit 1
+            fi
+            cp "$f" "dist/nofollow-${abi}.apk"
+          done
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          echo "apksigner: $APKSIGNER"
+          for f in dist/*.apk; do
+            echo "== $f"
+            OUT=$("$APKSIGNER" verify --verbose --print-certs "$f" 2>&1) || {
+              echo "$OUT"
+              echo "::error::apksigner menolak $f"
+              exit 1
+            }
+            if ! echo "$OUT" | grep -E "Signer.*certificate (DN|SHA-256)"; then
+              echo "$OUT"
+              echo "::error::Tidak ada info sertifikat di $f"
+              exit 1
+            fi
+            # Pengaman: kalau keystore gagal terbaca, Gradle bisa memakai kunci debug. Jangan dirilis.
+            if echo "$OUT" | grep -qi "Android Debug"; then
+              echo "::error::$f ditandatangani kunci DEBUG, bukan keystore rilis"
+              exit 1
+            fi
+          done
+
+      - name: Buat GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.apk \
+            --title "Nofollow $VERSION" \
+            --generate-notes
